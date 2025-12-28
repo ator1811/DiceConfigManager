@@ -1,0 +1,39 @@
+#######################################
+# Syntax Coloring Map For DiceConfigManager
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+DiceConfigManager	KEYWORD1
+DiceConfig	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+load	KEYWORD2
+save	KEYWORD2
+setDefaults	KEYWORD2
+validate	KEYWORD2
+getConfig	KEYWORD2
+setConfig	KEYWORD2
+setDiceId	KEYWORD2
+setDeviceAMac	KEYWORD2
+setDeviceB1Mac	KEYWORD2
+setDeviceB2Mac	KEYWORD2
+setRssiLimit	KEYWORD2
+setIsSMD	KEYWORD2
+setIsNano	KEYWORD2
+setAlwaysSeven	KEYWORD2
+printConfig	KEYWORD2
+printMacAddress	KEYWORD2
+macToString	KEYWORD2
+getLastError	KEYWORD2
+setVerbose	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################
