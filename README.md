@@ -40,8 +40,8 @@ DiceConfigManager configManager;
 void setup() {
   Serial.begin(115200);
   
-  // Initialize and load config
-  configManager.begin("/config.txt");
+  // Initialize with auto-detection (finds *_config.txt automatically)
+  configManager.begin();
   
   // Access configuration
   DiceConfig& config = configManager.getConfig();
@@ -53,9 +53,27 @@ void setup() {
 }
 ```
 
+### Auto-Detection Feature
+
+Upload config files with descriptive names like:
+- `TEST1_config.txt`
+- `BART1_config.txt`  
+- `ALICE_config.txt`
+
+The library automatically finds and loads files matching the `*_config.txt` pattern.
+
+**Important:** Only ONE `*_config.txt` file should exist on the ESP32 at a time. If multiple files are found, the library will use default values.
+
 ## Configuration File Format
 
-Create a file named `config.txt` in LittleFS:
+Create a file with a descriptive name matching the pattern `SETNAME_config.txt`:
+- `TEST1_config.txt`
+- `BART1_config.txt`
+- `MYDICE_config.txt`
+
+Or use the traditional name: `config.txt`
+
+File contents (key=value format):
 
 ```ini
 # Dice Configuration File
@@ -99,12 +117,21 @@ checksum=0
 ```cpp
 DiceConfigManager configManager;
 
-// Initialize with default path (/config.txt)
+// Auto-detect config file (searches for *_config.txt)
 bool begin();
 
-// Initialize with custom path
-bool begin(const char* configPath, bool formatOnFail = true);
+// Initialize with default path (/config.txt)
+bool begin(const char* configPath);
+
+// Initialize with custom path and format option
+bool begin(const char* configPath, bool formatOnFail);
 ```
+
+**Auto-detection behavior:**
+- If `configPath` is `nullptr` (or not provided), searches for files matching `*_config.txt`
+- If exactly ONE match found, loads that file
+- If zero or multiple matches, uses default configuration
+- Verbose mode shows which file was detected
 
 ### Load/Save
 
@@ -157,6 +184,9 @@ const char* getLastError();
 // Enable/disable debug output
 void setVerbose(bool enabled);
 
+// Get currently loaded config file path
+const char* getConfigPath();
+
 // Convert MAC to string
 String macToString(const uint8_t* mac);
 ```
@@ -189,6 +219,11 @@ struct DiceConfig {
 
 ### With ESPConnect
 
+**Users upload files with descriptive names:**
+- `TEST1_config.txt` for TEST1 dice set
+- `BART1_config.txt` for BART1 dice set
+- Only upload ONE config file at a time per ESP32
+
 ```cpp
 #include <DiceConfigManager.h>
 // ESPConnect handles file uploads to LittleFS automatically
@@ -196,14 +231,16 @@ struct DiceConfig {
 DiceConfigManager configManager;
 
 void setup() {
+  // Auto-detects *_config.txt files
   configManager.begin();
+  Serial.printf("Loaded: %s\n", configManager.getConfigPath());
   // ... setup ESPConnect
 }
 
 void onConfigUploaded() {
   // Reload after file upload
   if (configManager.load()) {
-    Serial.println("Config reloaded!");
+    Serial.printf("Config reloaded from: %s\n", configManager.getConfigPath());
     configManager.printConfig();
   }
 }
@@ -216,8 +253,8 @@ server.on("/upload", HTTP_POST, [](AsyncWebServerRequest *request) {
   request->send(200);
 }, [](AsyncWebServerRequest *request, String filename, size_t index, 
       uint8_t *data, size_t len, bool final) {
-  if (final && filename == "config.txt") {
-    configManager.load();  // Reload new config
+  if (final && filename.endsWith("_config.txt")) {
+    configManager.load();  // Auto-detects and reloads
   }
 });
 ```
@@ -292,6 +329,13 @@ Created for ESP32 Dice project
 Compatible with ESP32, ESP32-S2, ESP32-S3, ESP32-C3
 
 ## Version History
+
+- **1.1.0** - Auto-detection feature
+  - Automatic detection of `*_config.txt` files
+  - Support for descriptive config filenames (e.g., `TEST1_config.txt`)
+  - Added `getConfigPath()` method
+  - Enhanced error handling for multiple config files
+  - Updated all documentation and examples
 
 - **1.0.0** - Initial release
   - Basic load/save functionality

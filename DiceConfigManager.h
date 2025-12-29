@@ -39,7 +39,7 @@ public:
   DiceConfigManager();
   
   // Initialize LittleFS and load config
-  bool begin(const char* configPath = "/config.txt", bool formatOnFail = true);
+  bool begin(const char* configPath = nullptr, bool formatOnFail = true);
   
   // Load configuration from file
   bool load();
@@ -79,12 +79,18 @@ public:
   
   // Enable/disable verbose logging
   void setVerbose(bool enabled);
+  
+  // Get the currently loaded config filename
+  const char* getConfigPath();
 
 private:
   DiceConfig _config;
   char _configPath[64];
   char _lastError[128];
   bool _verbose;
+  
+  // Auto-detection helper
+  bool findConfigFile(char* foundPath, size_t maxLen);
   
   // Internal parsing functions
   bool parseMacAddress(const char* str, uint8_t* mac);

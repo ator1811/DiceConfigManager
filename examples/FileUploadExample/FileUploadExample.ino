@@ -4,6 +4,15 @@
  * This example demonstrates how to handle config file uploads
  * and reload configuration when files change.
  * 
+ * AUTO-DETECTION FEATURE:
+ * Users can upload files with descriptive names like:
+ * - TEST1_config.txt
+ * - BART1_config.txt
+ * - ALICE_config.txt
+ * 
+ * The library automatically finds and loads the *_config.txt file.
+ * IMPORTANT: Only ONE *_config.txt file should exist at a time!
+ * 
  * This works with file upload systems like:
  * - ESPConnect
  * - AsyncWebServer with file upload
@@ -103,11 +112,15 @@ void printHelp() {
 void onFileUploaded(const char* filename) {
   Serial.printf("File uploaded: %s\n", filename);
   
-  if (strcmp(filename, "/config.txt") == 0) {
+  // Check if it's a config file (matches *_config.txt pattern)
+  String fname = String(filename);
+  if (fname.endsWith("_config.txt") || fname.endsWith("config.txt")) {
     Serial.println("Config file uploaded, reloading...");
     
+    // The library will auto-detect the new config file
     if (configManager.load()) {
       Serial.println("New configuration loaded successfully!");
+      Serial.printf("Loaded from: %s\n", configManager.getConfigPath());
       
       // Validate the new configuration
       if (configManager.validate()) {

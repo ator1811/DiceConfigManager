@@ -54,26 +54,32 @@ RSSI Limit: -70 dBm
 
 ### 3. Upload Your Config File (2 minutes)
 
-**Edit config.txt:**
+**Edit and rename your config file:**
 ```ini
-diceId=MYDICE1
+# Rename to: TEST1_config.txt (or your set name)
+diceId=TEST1
 deviceA_mac=AA:BB:CC:DD:EE:01  # Replace with your actual MAC
 rssiLimit=-70
 isSMD=false
 ```
+
+**Important naming:**
+- Use format: `SETNAME_config.txt` (e.g., `TEST1_config.txt`, `BART1_config.txt`)
+- The library auto-detects files matching `*_config.txt` pattern
+- Only upload ONE config file per ESP32
 
 **Upload via ESPConnect:**
 ```
 1. Use ESPConnect in your sketch to create WiFi AP
 2. Connect to the AP
 3. Visit: https://thelastoutpostworkshop.github.io/ESPConnect/
-4. Upload your config.txt file
+4. Upload your SETNAME_config.txt file (e.g., TEST1_config.txt)
 ```
 
 **Or upload via LittleFS tool:**
 ```
 1. Create "data" folder in your sketch directory
-2. Put config.txt in data folder
+2. Put your SETNAME_config.txt in data folder
 3. Tools → ESP32 Sketch Data Upload
 ```
 

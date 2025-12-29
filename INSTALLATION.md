@@ -63,18 +63,25 @@ DiceConfigManager/
 
 ### 1. Upload Sample Config File
 
-You have two options:
+**Important:** Name your config file using the pattern: `SETNAME_config.txt`
+- Examples: `TEST1_config.txt`, `BART1_config.txt`, `ALICE_config.txt`
+- Or use traditional name: `config.txt`
+- Only ONE config file should exist on ESP32 at a time
+
+You have three options:
 
 #### Option A: Using ESPConnect (Recommended)
-1. Include ESPConnect in your sketch
-2. Connect to the device's WiFi AP
-3. Navigate to https://thelastoutpostworkshop.github.io/ESPConnect/
-4. Upload the provided `config.txt` file
+1. Rename your config file to match your set (e.g., `TEST1_config.txt`)
+2. Include ESPConnect in your sketch
+3. Connect to the device's WiFi AP
+4. Navigate to https://thelastoutpostworkshop.github.io/ESPConnect/
+5. Upload your `SETNAME_config.txt` file
 
 #### Option B: Using Arduino IDE Serial Upload
 ```cpp
 void uploadConfigViaSerial() {
-  File file = LittleFS.open("/config.txt", "w");
+  // Use your set name in the filename
+  File file = LittleFS.open("/TEST1_config.txt", "w");
   if (file) {
     file.println("diceId=TEST1");
     file.println("deviceA_mac=AA:BB:CC:DD:EE:01");
@@ -87,7 +94,7 @@ void uploadConfigViaSerial() {
 #### Option C: Using LittleFS Upload Tool
 1. Install "ESP32 LittleFS Data Upload" plugin
 2. Create a `data` folder in your sketch folder
-3. Put `config.txt` in the data folder
+3. Put your `SETNAME_config.txt` in the data folder
 4. Tools → ESP32 Sketch Data Upload
 
 ### 2. Basic Example
@@ -100,11 +107,14 @@ DiceConfigManager config;
 void setup() {
   Serial.begin(115200);
   
-  // Initialize (auto-loads config.txt)
+  // Initialize (auto-detects *_config.txt files)
   if (!config.begin()) {
     Serial.println("Init failed!");
     return;
   }
+  
+  // Show which config file was loaded
+  Serial.printf("Loaded: %s\n", config.getConfigPath());
   
   // Use the configuration
   DiceConfig& cfg = config.getConfig();
@@ -112,6 +122,11 @@ void setup() {
   Serial.printf("RSSI Limit: %d\n", cfg.rssiLimit);
 }
 ```
+
+**The library automatically:**
+- Searches for files matching `*_config.txt` pattern
+- Loads the file if exactly one is found
+- Uses defaults if zero or multiple files found
 
 ## 🔧 Configuration File Setup
 
@@ -136,14 +151,15 @@ void setup() {
 void loop() {}
 ```
 
-### Step 2: Edit config.txt
+### Step 2: Edit and Rename Config File
 
 1. Open the sample `config.txt`
-2. Replace MAC addresses with your actual device MACs
-3. Set your desired dice ID
-4. Adjust colors if needed (RGB565 format)
-5. Set RSSI limit based on your testing
-6. Configure hardware flags (isSMD, isNano)
+2. **Rename it** to match your set: `SETNAME_config.txt` (e.g., `TEST1_config.txt`)
+3. Replace MAC addresses with your actual device MACs
+4. Set your desired dice ID (should match the set name for clarity)
+5. Adjust colors if needed (RGB565 format)
+6. Set RSSI limit based on your testing
+7. Configure hardware flags (isSMD, isNano)
 
 ### Step 3: Upload to ESP32
 

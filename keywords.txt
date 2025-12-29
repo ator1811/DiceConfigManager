@@ -33,6 +33,7 @@ printMacAddress	KEYWORD2
 macToString	KEYWORD2
 getLastError	KEYWORD2
 setVerbose	KEYWORD2
+getConfigPath	KEYWORD2
 
 #######################################
 # Constants (LITERAL1)

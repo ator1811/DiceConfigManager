@@ -2,11 +2,17 @@
  * DiceConfigManager - Basic Example
  * 
  * This example demonstrates how to:
- * 1. Initialize the config manager
- * 2. Load configuration from LittleFS
+ * 1. Initialize the config manager with auto-detection
+ * 2. Load configuration from LittleFS (finds *_config.txt automatically)
  * 3. Access configuration values
  * 4. Modify configuration
  * 5. Save configuration back to LittleFS
+ * 
+ * AUTO-DETECTION FEATURE:
+ * - Upload a file named like: TEST1_config.txt, BART1_config.txt, etc.
+ * - Library automatically finds and loads it
+ * - If multiple *_config.txt files exist, it will use defaults
+ * - If zero *_config.txt files exist, it will use defaults
  * 
  * Hardware: ESP32-S3 or any ESP32 with LittleFS support
  */
@@ -25,14 +31,16 @@ void setup() {
   // Enable verbose output for debugging
   configManager.setVerbose(true);
   
-  // Initialize - this will:
-  // 1. Mount LittleFS
-  // 2. Try to load config.txt
-  // 3. Use defaults if file doesn't exist
-  if (!configManager.begin("/config.txt", true)) {
+  // Initialize with auto-detection (no path specified)
+  // This will search for any file matching *_config.txt pattern
+  // Examples: TEST1_config.txt, BART1_config.txt, MYDICE_config.txt
+  if (!configManager.begin()) {
     Serial.println("Failed to initialize config manager!");
     return;
   }
+  
+  // Show which config file was loaded
+  Serial.printf("Loaded config from: %s\n\n", configManager.getConfigPath());
   
   Serial.println("\n--- Current Configuration ---");
   configManager.printConfig();
@@ -62,7 +70,7 @@ void setup() {
     Serial.println(configManager.getLastError());
   }
   
-  // Save modified configuration
+  // Save modified configuration (saves back to auto-detected file)
   Serial.println("\n--- Saving Configuration ---");
   if (configManager.save()) {
     Serial.println("Configuration saved successfully!");
@@ -76,6 +84,10 @@ void setup() {
   configManager.printConfig();
   
   Serial.println("\n=== Example Complete ===");
+  Serial.println("\nNOTE: To use auto-detection:");
+  Serial.println("  1. Upload a file named like: SETNAME_config.txt");
+  Serial.println("  2. Make sure only ONE *_config.txt file exists");
+  Serial.println("  3. The library will find and load it automatically");
 }
 
 void loop() {

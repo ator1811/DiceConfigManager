@@ -14,11 +14,6 @@ DiceConfigManager::DiceConfigManager() {
 
 // Initialize LittleFS and optionally load config
 bool DiceConfigManager::begin(const char* configPath, bool formatOnFail) {
-  if (configPath != nullptr) {
-    strncpy(_configPath, configPath, sizeof(_configPath) - 1);
-    _configPath[sizeof(_configPath) - 1] = '\0';
-  }
-  
   if (!LittleFS.begin(formatOnFail)) {
     setError("LittleFS mount failed");
     return false;
@@ -28,10 +23,35 @@ bool DiceConfigManager::begin(const char* configPath, bool formatOnFail) {
     Serial.println("LittleFS mounted successfully");
   }
   
+  // If no explicit path provided, try auto-detection
+  if (configPath == nullptr) {
+    if (_verbose) {
+      Serial.println("No config path specified, searching for *_config.txt...");
+    }
+    
+    if (findConfigFile(_configPath, sizeof(_configPath))) {
+      if (_verbose) {
+        Serial.printf("Auto-detected config file: %s\n", _configPath);
+      }
+    } else {
+      // No config file found or multiple found
+      if (_verbose) {
+        Serial.println("No unique config file found, using defaults");
+      }
+      strcpy(_configPath, "/config.txt"); // Set default for save operations
+      setDefaults();
+      return true; // Not a critical error
+    }
+  } else {
+    // Explicit path provided
+    strncpy(_configPath, configPath, sizeof(_configPath) - 1);
+    _configPath[sizeof(_configPath) - 1] = '\0';
+  }
+  
   // Try to load existing config, otherwise use defaults
   if (!load()) {
     if (_verbose) {
-      Serial.println("No config file found, using defaults");
+      Serial.println("Config file not loaded, using defaults");
     }
     setDefaults();
     return true; // Not a critical error
@@ -373,7 +393,79 @@ void DiceConfigManager::setVerbose(bool enabled) {
   _verbose = enabled;
 }
 
+const char* DiceConfigManager::getConfigPath() {
+  return _configPath;
+}
+
 // Private methods
+bool DiceConfigManager::findConfigFile(char* foundPath, size_t maxLen) {
+  File root = LittleFS.open("/");
+  if (!root) {
+    if (_verbose) {
+      Serial.println("Failed to open root directory");
+    }
+    return false;
+  }
+  
+  if (!root.isDirectory()) {
+    if (_verbose) {
+      Serial.println("Root is not a directory");
+    }
+    return false;
+  }
+  
+  int matchCount = 0;
+  char firstMatch[64] = {0};
+  
+  File file = root.openNextFile();
+  while (file) {
+    String filename = String(file.name());
+    
+    // Check if filename matches pattern: *_config.txt
+    if (filename.endsWith("_config.txt")) {
+      matchCount++;
+      
+      if (_verbose) {
+        Serial.printf("Found config file: %s\n", filename.c_str());
+      }
+      
+      // Store first match
+      if (matchCount == 1) {
+        strncpy(firstMatch, filename.c_str(), sizeof(firstMatch) - 1);
+        firstMatch[sizeof(firstMatch) - 1] = '\0';
+      }
+    }
+    
+    file = root.openNextFile();
+  }
+  
+  root.close();
+  
+  // Return success only if exactly one match found
+  if (matchCount == 1) {
+    // Ensure path starts with /
+    if (firstMatch[0] != '/') {
+      snprintf(foundPath, maxLen, "/%s", firstMatch);
+    } else {
+      strncpy(foundPath, firstMatch, maxLen - 1);
+      foundPath[maxLen - 1] = '\0';
+    }
+    return true;
+  } else if (matchCount == 0) {
+    setError("No *_config.txt file found");
+    if (_verbose) {
+      Serial.println("No files matching *_config.txt pattern found");
+    }
+  } else {
+    setError("Multiple *_config.txt files found");
+    if (_verbose) {
+      Serial.printf("Error: Found %d config files. Only one allowed.\n", matchCount);
+    }
+  }
+  
+  return false;
+}
+
 bool DiceConfigManager::parseMacAddress(const char* str, uint8_t* mac) {
   int values[6];
   if (sscanf(str, "%x:%x:%x:%x:%x:%x",
